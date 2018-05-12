@@ -7,11 +7,11 @@ public class Demo : MonoBehaviour {
     {
         if(GUILayout.Button("Change"))
         {
-            swh.OnHideGroupChange("tree");
+            swh.TransparentGroup("tree");
         }
         if(GUILayout.Button("Reset"))
         {
-            swh.OnHideGroupChange(null);
+            swh.TransparentGroup(null);
         }
     }
 }

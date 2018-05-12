@@ -17,7 +17,7 @@ public class BackGroupHideSwitch : MonoBehaviour
     }
     [SerializeField]
     private List<GroupItem> itemList = new List<GroupItem>();
-    private string lastItem;
+    private List<string> transparentItems = new List<string>();
     private RendererOperation renderOperate;
     private Dictionary<string, GroupItem> operates;
 
@@ -33,54 +33,105 @@ public class BackGroupHideSwitch : MonoBehaviour
             var renderList = new List<Renderer>();
             foreach (var go in item.worp)
             {
-               var rds = go.GetComponentsInChildren<Renderer>(true);
-                if(rds != null)
+                var rds = go.GetComponentsInChildren<Renderer>(true);
+                if (rds != null)
                 {
                     renderList.AddRange(rds);
                 }
             }
-            item.renderOperate = new RendererOperation(item.worpmat,renderList.ToArray());
+            item.renderOperate = new RendererOperation(item.worpmat, renderList.ToArray());
             operates[item.key] = item;
         }
     }
 
-
-    public void OnHideGroupChange(string arg0 = null)
+    /// <summary>
+    /// 透明指定模块
+    /// </summary>
+    /// <param name="arg0"></param>
+    /// <param name="autoShow"></param>
+    public void TransparentGroup(string item, bool autoShow = false)
     {
-        string item = null;
-        if (!string.IsNullOrEmpty(arg0))
+        if (!ContainModule(item)) return;
+
+        if (autoShow)
         {
-            var gitem = itemList.Find(x => x.key == arg0);
-            if(gitem != null)
+            ReverLastGroups();
+        }
+
+        if (item != null)
+        {
+            TransparentGroupItem(item);
+        }
+    }
+
+    /// <summary>
+    /// 透明除指定模块所有模块
+    /// </summary>
+    /// <param name="arg0"></param>
+    public void TranparentExceptGroup(string key)
+    {
+        if (!ContainModule(key)) return;
+
+        for (int i = 0; i < itemList.Count; i++)
+        {
+            var item = itemList[i].key;
+            if (item != key)
             {
-                item = gitem.key;
+                TransparentGroupItem(itemList[i].key);
+            }
+            else
+            {
+                RevertGroupItem(key);
             }
         }
-
-        if (lastItem != null && lastItem != item)
-        {
-            ShowGroupItem(lastItem);
-        }
-
-        if (item != null && item != lastItem)
-        {
-            HideGroupItem(item);
-        }
-
-        lastItem = item;
     }
-    private void ShowGroupItem(string item)
+
+    /// <summary>
+    /// 显示所有被透明模块
+    /// </summary>
+    public void ReverLastGroups()
     {
-        if(operates.ContainsKey(item))
+        foreach (var item in transparentItems)
+        {
+            RevertGroupItem(item);
+        }
+        transparentItems.Clear();
+    }
+
+    private bool ContainModule(string key)
+    {
+        if (!string.IsNullOrEmpty(key))
+        {
+            var gitem = itemList.Find(x => x.key == key);
+            if (gitem != null)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void RevertGroupItem(string item)
+    {
+        if (operates.ContainsKey(item))
         {
             operates[item].renderOperate.Recovery();
         }
+        if (transparentItems.Contains(item))
+        {
+            transparentItems.Remove(item);
+        }
     }
-    public void HideGroupItem(string item)
+
+    public void TransparentGroupItem(string item)
     {
         if (operates.ContainsKey(item))
         {
             operates[item].renderOperate.WorpRenderers();
+        }
+        if (!transparentItems.Contains(item))
+        {
+            transparentItems.Add(item);
         }
     }
 }
